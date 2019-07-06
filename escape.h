@@ -1,5 +1,5 @@
-#ifndef TEST1_ESCAPE_H
-#define TEST1_ESCAPE_H
+#ifndef ESCAPE_H
+#define ESCAPE_H
 
 #include <string>
 
@@ -22,4 +22,4 @@ namespace escape {
     }
 }
 
-#endif //TEST1_ESCAPE_H
+#endif //ESCAPE_H

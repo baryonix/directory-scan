@@ -1,5 +1,5 @@
-#ifndef TEST1_DIRECTORY_SCAN_H
-#define TEST1_DIRECTORY_SCAN_H
+#ifndef DIRECTORY_SCAN_H
+#define DIRECTORY_SCAN_H
 
 #include <filesystem>
 
@@ -128,4 +128,4 @@ namespace directory_scan {
 
 }
 
-#endif //TEST1_DIRECTORY_SCAN_H
+#endif //DIRECTORY_SCAN_H

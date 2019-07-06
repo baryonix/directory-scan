@@ -1,5 +1,5 @@
-#ifndef TEST1_COLLECTOR_H
-#define TEST1_COLLECTOR_H
+#ifndef COLLECTOR_H
+#define COLLECTOR_H
 
 #include <mutex>
 #include <vector>
@@ -33,4 +33,4 @@ namespace collector {
 
 }
 
-#endif //TEST1_COLLECTOR_H
+#endif //COLLECTOR_H
