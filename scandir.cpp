@@ -12,6 +12,9 @@
 #include "escape.h"
 
 
+namespace chrono = boost::chrono;
+
+
 class Configuration {
 public:
     std::vector<std::string> directories;
@@ -28,8 +31,10 @@ static Configuration parse_command_line(int argc, char *argv[]) {
     description.add_options()
             ("help,h", "Help screen")
             ("directory,d", value<std::vector<std::string>>(&configuration.directories), "Directories to search")
-            ("parallelism,p", value<unsigned>(&configuration.parallelism)->default_value(1), "Number of concurrent threads")
-            ("output-file,o", value<std::string>(&configuration.outputFileName)->default_value("-"), "Output file name, or \"-\" for standard output");
+            ("parallelism,p", value<unsigned>(&configuration.parallelism)->default_value(1),
+             "Number of concurrent threads")
+            ("output-file,o", value<std::string>(&configuration.outputFileName)->default_value("-"),
+             "Output file name, or \"-\" for standard output");
 
     positional_options_description positional;
     positional.add("directory", -1);
@@ -62,10 +67,25 @@ static void outputResults(std::ostream &output, Iterator first, Iterator last) {
 }
 
 
-static void scanAndOutput(const Configuration &configuration, std::ostream &output) {
+template<class Consumer>
+static void performScan(const Configuration &configuration, Consumer &consumer) {
+    typedef chrono::high_resolution_clock clock;
+    auto startTime = clock::now();
+
     const auto &directories = configuration.directories;
+    directory_scan::scanDirectories(directories.begin(), directories.end(), consumer, configuration.parallelism);
+
+    chrono::duration duration = clock::now() - startTime;
+    std::cerr
+            << "File system scan completed in "
+            << chrono::duration_cast<chrono::milliseconds>(duration).count() * 1.0e-3
+            << " seconds" << std::endl;
+}
+
+
+static void scanAndOutput(const Configuration &configuration, std::ostream &output) {
     collector::VectorCollector<directory_scan::FileInformation> collector;
-    directory_scan::scanDirectories(directories.begin(), directories.end(), collector, configuration.parallelism);
+    performScan(configuration, collector);
     auto files = collector.retrieveAndClear();
     std::sort(files.begin(), files.end());
     outputResults(output, files.begin(), files.end());
