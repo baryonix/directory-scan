@@ -30,10 +30,10 @@ static Configuration parse_command_line(int argc, char *argv[]) {
     options_description description{"Options"};
     description.add_options()
             ("help,h", "Help screen")
-            ("directory,d", value<std::vector<std::string>>(&configuration.directories), "Directories to search")
-            ("parallelism,p", value<unsigned>(&configuration.parallelism)->default_value(1),
+            ("directory,d", value(&configuration.directories), "Directories to search")
+            ("parallelism,p", value(&configuration.parallelism)->default_value(1),
              "Number of concurrent threads")
-            ("output-file,o", value<std::string>(&configuration.outputFileName)->default_value("-"),
+            ("output-file,o", value(&configuration.outputFileName)->default_value("-"),
              "Output file name, or \"-\" for standard output");
 
     positional_options_description positional;
