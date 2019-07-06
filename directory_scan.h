@@ -99,7 +99,7 @@ namespace directory_scan {
             if (S_ISDIR(status.st_mode)) {
                 asio::post(pool, childScanner(childPath));
             } else {
-                consumer(toFile(childPath, status));
+                consumer(fileInformation(childPath, status));
             }
         }
 
@@ -107,7 +107,7 @@ namespace directory_scan {
             return PathScanner{child, pool, consumer};
         }
 
-        static FileInformation toFile(const fs::path &path, const struct stat &status) {
+        static FileInformation fileInformation(const fs::path &path, const struct stat &status) {
             return FileInformation(path.string(), status.st_size, fromTimespec(status.st_mtim));
         }
 
