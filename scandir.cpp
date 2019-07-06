@@ -16,6 +16,19 @@ static void parse_command_line(int argc, char *argv[]) {
 }
 
 
+template<class Iterator>
+static void outputResults(std::ostream &output, Iterator first, Iterator last) {
+    boost::chrono::set_time_fmt(output, std::string("%FT%T%Ez"));
+    for (Iterator iterator = first; iterator != last; ++iterator) {
+        const auto &file = *iterator;
+        output
+                << boost::chrono::system_clock::from_time_t(file.lastWriteTime()) << ' '
+                << file.size() << ' '
+                << escape::escapeSpecialChars(file.path()) << std::endl;
+    }
+}
+
+
 int main(int argc, char *argv[]) {
     std::vector<std::string> directoriesToScan = {"/home/jan"};
     collector::VectorCollector<directory_scan::FileInformation> collector;
@@ -23,13 +36,7 @@ int main(int argc, char *argv[]) {
     auto files = collector.retrieveAndClear();
     std::sort(files.begin(), files.end());
 
-    boost::chrono::set_time_fmt(std::cout, std::string("%FT%T%Ez"));
-    for (const auto &file : files) {
-        std::cout
-                << boost::chrono::system_clock::from_time_t(file.lastWriteTime()) << ' '
-                << file.size() << ' '
-                << escape::escapeSpecialChars(file.path()) << std::endl;
-    }
+    outputResults(std::cout, files.begin(), files.end());
 
     return 0;
 }
