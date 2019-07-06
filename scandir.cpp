@@ -2,17 +2,47 @@
 #include <boost/chrono/io/time_point_io.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
+#include <vector>
+#include <string>
+#include <cstdlib>
 
 #include "collector.h"
 #include "directory_scan.h"
 #include "escape.h"
 
 
-static void parse_command_line(int argc, char *argv[]) {
+class Configuration {
+public:
+    std::vector<std::string> directories;
+    unsigned parallelism = 0;
+};
+
+
+static Configuration parse_command_line(int argc, char *argv[]) {
     using namespace boost::program_options;
+    Configuration configuration;
+
     options_description description{"Options"};
     description.add_options()
-            ("help,h", "Help screen");
+            ("help,h", "Help screen")
+            ("directory,d", value<std::vector<std::string>>(&configuration.directories), "Directories to search")
+            ("parallelism,p", value<unsigned>(&configuration.parallelism)->default_value(1), "Number of concurrent threads");
+
+    positional_options_description positional;
+    positional.add("directory", -1);
+
+    auto parseResult = command_line_parser(argc, argv).options(description).positional(positional).run();
+
+    variables_map variablesMap;
+    store(parseResult, variablesMap);
+    notify(variablesMap);
+
+    if (variablesMap.count("help")) {
+        std::cerr << description;
+        std::exit(1);
+    }
+
+    return configuration;
 }
 
 
@@ -30,9 +60,11 @@ static void outputResults(std::ostream &output, Iterator first, Iterator last) {
 
 
 int main(int argc, char *argv[]) {
-    std::vector<std::string> directoriesToScan = {"/home/jan"};
+    Configuration configuration = parse_command_line(argc, argv);
+
+    const auto &directories = configuration.directories;
     collector::VectorCollector<directory_scan::FileInformation> collector;
-    directory_scan::scanDirectories(directoriesToScan.cbegin(), directoriesToScan.cend(), collector, 16);
+    directory_scan::scanDirectories(directories.begin(), directories.end(), collector, configuration.parallelism);
     auto files = collector.retrieveAndClear();
     std::sort(files.begin(), files.end());
 
