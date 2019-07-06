@@ -53,7 +53,7 @@ namespace directory_scan {
             return _size;
         }
 
-        const time_type lastWriteTime() const {
+        const time_type &lastWriteTime() const {
             return _lastWriteTime;
         }
 
