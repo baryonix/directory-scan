@@ -8,11 +8,13 @@
 #include <unistd.h>
 
 #include <boost/asio.hpp>
+#include <boost/chrono/time_point.hpp>
 
 
 namespace directory_scan {
 
     namespace asio = boost::asio;
+    namespace chrono = boost::chrono;
     namespace fs = std::filesystem;
 
 
@@ -36,8 +38,12 @@ namespace directory_scan {
 
     class FileInformation {
     public:
-        FileInformation(std::string path, uint64_t size, time_t lastWriteTime) : _path(std::move(path)), _size(size),
-                                                                                 _lastWriteTime(lastWriteTime) {}
+        typedef chrono::time_point<chrono::system_clock> time_type;
+
+        FileInformation(std::string path, uint64_t size, const time_type &lastWriteTime) : _path(std::move(path)),
+                                                                                           _size(size),
+                                                                                           _lastWriteTime(
+                                                                                                   lastWriteTime) {}
 
         const std::string &path() const {
             return _path;
@@ -47,7 +53,7 @@ namespace directory_scan {
             return _size;
         }
 
-        std::time_t lastWriteTime() const {
+        const time_type lastWriteTime() const {
             return _lastWriteTime;
         }
 
@@ -58,7 +64,7 @@ namespace directory_scan {
     private:
         std::string _path;
         uint64_t _size;
-        std::time_t _lastWriteTime;
+        time_type _lastWriteTime;
     };
 
 
@@ -102,7 +108,12 @@ namespace directory_scan {
         }
 
         static FileInformation toFile(const fs::path &path, const struct stat &status) {
-            return FileInformation(path.string(), status.st_size, status.st_mtime);
+            return FileInformation(path.string(), status.st_size, fromTimespec(status.st_mtim));
+        }
+
+        static FileInformation::time_type fromTimespec(const timespec &timespec) {
+            return FileInformation::time_type(chrono::seconds(timespec.tv_sec))
+                   + chrono::nanoseconds(timespec.tv_nsec);
         }
 
         static void logError(const fs::filesystem_error &error, const std::string &message) {

@@ -55,7 +55,7 @@ static void outputResults(std::ostream &output, Iterator first, Iterator last) {
     for (Iterator iterator = first; iterator != last; ++iterator) {
         const auto &file = *iterator;
         output
-                << boost::chrono::system_clock::from_time_t(file.lastWriteTime()) << ' '
+                << file.lastWriteTime() << ' '
                 << file.size() << ' '
                 << escape::escapeSpecialChars(file.path()) << std::endl;
     }
