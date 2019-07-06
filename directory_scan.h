@@ -88,11 +88,12 @@ namespace directory_scan {
         }
 
         void processEntry(const fs::directory_entry &entry) {
-            struct stat status = do_lstat(entry.path());
+            const fs::path &childPath = entry.path();
+            struct stat status = do_lstat(childPath);
             if (S_ISDIR(status.st_mode)) {
-                asio::post(pool, childScanner(entry.path()));
+                asio::post(pool, childScanner(childPath));
             } else {
-                consumer(toFile(entry.path(), status));
+                consumer(toFile(childPath, status));
             }
         }
 
