@@ -81,6 +81,10 @@ namespace directory_scan {
             }
         }
 
+        const fs::path &getPath() const {
+            return path;
+        }
+
     private:
         void scan() {
             for (const fs::directory_entry &entry : fs::directory_iterator(path)) {
