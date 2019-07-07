@@ -3,6 +3,8 @@ project(directory_scan)
 
 set(CMAKE_CXX_STANDARD 17)
 
+enable_testing()
+
 find_package(Boost)
 find_package(GTest)
 
