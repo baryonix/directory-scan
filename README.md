@@ -79,3 +79,39 @@ Es ist allerdings theoretisch auch möglich, dass Pfadnamen Zeilentrenner (`CR` 
 `LF`) enthalten. Damit dies nicht zu einer korrupten Ausgabedatei führt, werden
 `CR` und `LF` durch einen vorangestellten Backslash gequotet. Der Backslash selbst
 wird durch Verdoppelung ebenfalls gequotet ausgegeben.
+
+# Performance
+
+Es wurde eine Performancemessung im Vergleich mit dem `find`-Befehl unter Linux
+durchgeführt. Dabei wurde ein einzelnes Verzeichnis auf SSD-Storage mit insgesamt
+ca. 2.5 Millionen Dateien durchsucht.
+
+Vor dem Test wurde jeweils der Dateisystem-Cache über den Befehl
+`sysctl -w vm.drop_caches=3` geleert.
+
+## `find`-Befehl
+
+Der Befehl wurde mit folgender Kommandozeile ausgeführt:
+
+```
+find /home \! -type d -ls >find.out
+```
+
+Die Laufzeit schwankte bei mehrfacher Ausführung etwas, lag im Mittel aber
+bei ca. 50 Sekunden.
+
+## `scandir`
+
+Der Befehl wurde wie folgt aufgerufen:
+
+```
+./scandir -p 16 -o scandir.out /home
+```
+
+Die Gesamtlaufzeit lag bei 17 Sekunden. Der größte Teil der Laufzeit wurde jedoch
+für die (nicht parallelisierte) Sortierung und Formatierung der Ergebnisse
+aufgewendet. Das eigentliche Durchsuchen des Verzeichnisses war bereits nach ca.
+4.1 Sekunden abgeschlossen.
+
+Der Vergleich der Ausgabedateien zeigt, dass `find` und `scandir` exakt gleich
+viele Ergebnisse zurückgeliefert haben.
