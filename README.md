@@ -113,5 +113,8 @@ für die (nicht parallelisierte) Sortierung und Formatierung der Ergebnisse
 aufgewendet. Das eigentliche Durchsuchen des Verzeichnisses war bereits nach ca.
 4.1 Sekunden abgeschlossen.
 
+Der maximale Arbeitsspeicherverbrauch von `scandir` lag bei ca. 390 MB bei einer
+Größe der Ausgabedatei von 260 MB.
+
 Der Vergleich der Ausgabedateien zeigt, dass `find` und `scandir` exakt gleich
 viele Ergebnisse zurückgeliefert haben.
