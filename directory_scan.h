@@ -13,7 +13,6 @@
 
 namespace directory_scan {
 
-    namespace asio = boost::asio;
     namespace chrono = boost::chrono;
     namespace fs = std::filesystem;
 
@@ -97,7 +96,7 @@ namespace directory_scan {
             const fs::path &childPath = entry.path();
             struct stat status = do_lstat(childPath);
             if (S_ISDIR(status.st_mode)) {
-                asio::post(executor, childScanner(childPath));
+                executor(childScanner(childPath));
             } else {
                 consumer(fileInformation(childPath, status));
             }
@@ -131,11 +130,11 @@ namespace directory_scan {
 
     template<class Iterator, class Consumer>
     static void scanDirectories(Iterator first, Iterator last, Consumer &consumer, unsigned parallelism) {
-        asio::thread_pool pool{parallelism};
-        auto executor = pool.get_executor();
+        boost::asio::thread_pool pool{parallelism};
+        auto executor = [&pool](auto task) { boost::asio::post(pool, task); };
 
         for (Iterator iterator = first; iterator != last; ++iterator)
-            asio::post(executor, PathScanner{*iterator, executor, consumer});
+            executor(PathScanner{*iterator, executor, consumer});
 
         pool.join();
     }
