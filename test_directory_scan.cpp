@@ -1,10 +1,18 @@
 #include <string>
+#include <filesystem>
+#include <fstream>
 
+#include <boost/any.hpp>
 #include <boost/chrono/system_clocks.hpp>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "directory_scan.h"
+
+
+using namespace testing;
+namespace fs = std::filesystem;
 
 
 static const std::string path = "my/test/path";
@@ -25,4 +33,56 @@ TEST(FileInformation, comparison) {
     EXPECT_TRUE(left < right);
     EXPECT_FALSE(right < left);
     EXPECT_FALSE(left < left);
+}
+
+
+static const fs::path TEST_ROOT{"TEST_ROOT"};
+static const fs::path TEST_FILE = TEST_ROOT / "file";
+static const fs::path TEST_SUBDIR = TEST_ROOT / "subdir";
+
+static void setUpTestDirectory() {
+    if (fs::exists(TEST_ROOT))
+        fs::remove_all(TEST_ROOT);
+
+    fs::create_directory(TEST_ROOT);
+    fs::create_directory(TEST_SUBDIR);
+    std::ofstream(TEST_FILE) << "foobar" << std::endl;
+}
+
+class MockConsumer {
+public:
+    void operator()(const directory_scan::FileInformation &t) {
+        consume(t);
+    }
+
+    MOCK_METHOD1(consume, void(
+            const directory_scan::FileInformation&));
+};
+
+class MockExecutor;
+
+typedef directory_scan::PathScanner<MockExecutor &, MockConsumer> StubbedPathScanner;
+
+class MockExecutor {
+public:
+    void operator()(const StubbedPathScanner &t) {
+        execute(t);
+    }
+
+    MOCK_METHOD1(execute, void(
+            const StubbedPathScanner&));
+};
+
+
+TEST(PathScanner, scan) {
+    setUpTestDirectory();
+
+    MockExecutor executor;
+    MockConsumer consumer;
+    StubbedPathScanner pathScanner{TEST_ROOT, executor, consumer};
+
+    EXPECT_CALL(executor, execute(Property(&StubbedPathScanner::getPath, Eq(TEST_SUBDIR))));
+    EXPECT_CALL(consumer, consume(Property(&directory_scan::FileInformation::path, Eq(TEST_FILE))));
+
+    pathScanner();
 }
