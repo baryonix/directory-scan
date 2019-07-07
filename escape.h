@@ -11,7 +11,7 @@ namespace escape {
      * to be faster by about a factor of 20.
      */
     static std::string escapeSpecialChars(const std::string &input) {
-        static const std::string escapeUs{"\r\n"};
+        static const std::string escapeUs{"\r\n\\"};
         std::string result;
         for (char c : input) {
             if (escapeUs.find(c) != std::string::npos)
