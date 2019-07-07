@@ -68,11 +68,11 @@ namespace directory_scan {
     };
 
 
-    template<class Consumer>
+    template<class Executor, class Consumer>
     class PathScanner {
     public:
-        PathScanner(fs::path path, asio::thread_pool &pool, Consumer &consumer)
-                : path(std::move(path)), pool(pool), consumer(consumer) {}
+        PathScanner(fs::path path, Executor executor, Consumer &consumer)
+                : path(std::move(path)), executor(executor), consumer(consumer) {}
 
         void operator()() {
             try {
@@ -97,14 +97,14 @@ namespace directory_scan {
             const fs::path &childPath = entry.path();
             struct stat status = do_lstat(childPath);
             if (S_ISDIR(status.st_mode)) {
-                asio::post(pool, childScanner(childPath));
+                asio::post(executor, childScanner(childPath));
             } else {
                 consumer(fileInformation(childPath, status));
             }
         }
 
         PathScanner childScanner(const fs::path &child) {
-            return PathScanner{child, pool, consumer};
+            return PathScanner{child, executor, consumer};
         }
 
         static FileInformation fileInformation(const fs::path &path, const struct stat &status) {
@@ -124,7 +124,7 @@ namespace directory_scan {
         }
 
         fs::path path;
-        asio::thread_pool &pool;
+        Executor executor;
         Consumer &consumer;
     };
 
@@ -132,8 +132,11 @@ namespace directory_scan {
     template<class Iterator, class Consumer>
     static void scanDirectories(Iterator first, Iterator last, Consumer &consumer, unsigned parallelism) {
         asio::thread_pool pool{parallelism};
+        auto executor = pool.get_executor();
+
         for (Iterator iterator = first; iterator != last; ++iterator)
-            asio::post(pool, PathScanner{*iterator, pool, consumer});
+            asio::post(executor, PathScanner{*iterator, executor, consumer});
+
         pool.join();
     }
 
